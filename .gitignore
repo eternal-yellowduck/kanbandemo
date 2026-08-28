@@ -1,0 +1,28 @@
+# Go
+/kanban-demo.exe
+/kanban-demo
+*.test
+
+# Local runtime data
+.data/
+
+# Frontend dependencies and builds
+web/node_modules/
+web/dist/
+
+# Test and tool output
+playwright-report/
+test-results/
+coverage/
+
+# Local environment and editor files
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db

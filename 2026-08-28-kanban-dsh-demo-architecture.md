@@ -35,6 +35,14 @@ Infrastructure
 
 依赖方向只能从上到下。Domain 不依赖 UI、文件系统、DSH 或具体传输协议；DSH 只能通过 Infrastructure 层的 Adapter 接入。
 
+## 1.1 技术实现基线
+
+- 服务端使用 Go + Gin，领域和应用逻辑保持纯 Go 包，不依赖 Gin 类型。
+- HTTP API 和 SSE 由 Go 服务端提供；Gin 只负责路由和 HTTP 层中间件。
+- 前端使用 TypeScript + React + Vite。开发时 Vite 独立运行并代理到 Go 服务，演示/生产时由 Go 服务托管构建产物。
+- 运行时持久化使用 SQLite，通过 `database/sql` 和 `modernc.org/sqlite` 访问；测试使用内存 Store。
+- 单仓库包含 Go 和 `web/` 两个构建单元，不引入 monorepo 工作区管理。
+
 ## 2. 目标和约束
 
 ### 2.1 目标
@@ -356,7 +364,7 @@ Context Builder 在每个 Attempt 启动前生成上下文快照，不由 UI 拼
 
 ## 10. 持久化和事件
 
-第一版使用本地 SQLite 或 JSON Store。推荐 SQLite 作为运行实现，内存 Store 只用于测试。
+第一版使用本地 SQLite，Go 通过 `database/sql` 和 `modernc.org/sqlite` 访问；内存 Store 只用于测试。数据库文件放在项目 `.data/` 目录，不提交到 Git。
 
 持久化至少覆盖：
 
@@ -442,6 +450,8 @@ store_error            持久化失败
 - 原生输入和 resume 能力；
 - 取消和重复事件。
 
+服务端测试使用 Go 原生 `testing`，运行 `go test ./...`。Gin handler 测试使用 `httptest`；领域测试不能依赖 HTTP 框架。
+
 ### Contract 测试
 
 Fake Harness 和 DSH Adapter 必须通过同一组 Harness contract tests。替换 Harness 时，Domain 和 Application 测试不应修改。
@@ -450,7 +460,7 @@ Fake Harness 和 DSH Adapter 必须通过同一组 Harness contract tests。替�
 
 ### Phase 1：Domain 和内存 Store
 
-实现 Task、Run、Attempt、Check、Block、Event，以及所有状态转换测试。
+已实现 Task、Run、Attempt、Check、Block、Event、应用层 Store 接口和内存 Store；状态转换、结构化完成、人工输入恢复和事件幂等测试已通过。
 
 ### Phase 2：Application 和 Fake Harness
 
@@ -467,6 +477,8 @@ Fake Harness 和 DSH Adapter 必须通过同一组 Harness contract tests。替�
 ### Phase 5：最小 UI/CLI
 
 接入五列看板、任务详情、Run/Check 时间线和回答入口。
+
+前端使用 React + Vite，端到端验收使用 Playwright；第一版不引入前端 Vitest。
 
 ## 15. 给实现 Agent 的硬约束
 
